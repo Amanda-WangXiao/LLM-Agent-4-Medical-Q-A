@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anesthesia Agent</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chatbox {
+            height: 400px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: scroll;
+            margin-bottom: 20px;
+        }
+        #userInput {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .source {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            padding-left: 20px;
+            border-left: 2px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Anesthesia Agent</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="userInput" placeholder="Ask a question...">
+    <button onclick="sendQuery()">Send</button>
+
+    <script>
+        function sendQuery() {
+            const userInput = document.getElementById('userInput');
+            const query = userInput.value;
+            const chatbox = document.getElementById('chatbox');
+
+            // Add user query to chatbox
+            chatbox.innerHTML += `<p><strong>You:</strong> ${query}</p>`;
+
+            // Clear input field
+            userInput.value = '';
+
+            // Show loading message
+            chatbox.innerHTML += `<p><strong>Agent:</strong> Thinking...</p>`;
+            chatbox.scrollTop = chatbox.scrollHeight;
+
+            axios.post('/query', {query: query})
+                .then(function (response) {
+                    console.log("Response from server:", response.data);  // Debug information
+                    // Remove loading message
+                    chatbox.removeChild(chatbox.lastChild);
+
+                    // Add agent's response to chatbox
+                    chatbox.innerHTML += `<p><strong>Agent:</strong> ${response.data.answer}</p>`;
+
+                    // Add sources if available
+                    if (response.data.sources && response.data.sources.length > 0) {
+                        chatbox.innerHTML += `<div class="source"><strong>Sources:</strong></div>`;
+                        response.data.sources.forEach(source => {
+                            chatbox.innerHTML += `<div class="source">${source}</div>`;
+                        });
+                    } else {
+                        console.log("No sources found in the response");  // Debug information
+                    }
+
+                    chatbox.scrollTop = chatbox.scrollHeight;
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    chatbox.innerHTML += `<p><strong>Error:</strong> An error occurred. Please try again.</p>`;
+                    chatbox.scrollTop = chatbox.scrollHeight;
+                });
+        }
+
+        // Allow sending query by pressing Enter key
+        document.getElementById('userInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendQuery();
+            }
+        });
+    </script>
+</body>
+</html>
